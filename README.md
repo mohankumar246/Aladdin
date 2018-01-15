@@ -4,15 +4,15 @@ This README would normally document whatever steps are necessary to get your app
 
 ### What is this repository for? ###
 
-$$$$$$$$$$$$
+This is for creating a crypto currency trading bot.
 
 ### How do I get set up? ###
 
-you can't
+to do
 
 ### Contribution guidelines ###
 
-blah
+to do
 
 ### Who do I talk to? ###
 
