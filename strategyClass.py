@@ -1,3 +1,3 @@
 class Strategy:
-    def __init__(self, keyfile):
+    def __init__(self):
         pass

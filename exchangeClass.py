@@ -22,4 +22,3 @@ class Exchange:
 
     def getPair(self, coinA, coinB):
         pass
-
