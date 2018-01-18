@@ -5,9 +5,12 @@
 
 # Prints the account balance to standard output.
 
-import krakenex
 import pprint
+import time
+import requests
 from requests.exceptions import HTTPError
+
+import krakenex
 from exchangeClass import Exchange
 
 class Kraken(Exchange):
@@ -17,7 +20,7 @@ class Kraken(Exchange):
     def __init__(self, keyfile):
         self.handle = krakenex.API()
         self.handle.load_key(keyfile)
-        super.__init__()
+        super().__init__('none')
 
     def waitTillComplete(self, id, timeOut):
         while True:
@@ -38,11 +41,11 @@ class Kraken(Exchange):
         product  = self.getPair(coinA, coinB)
         try:
             response = self.handle.query_public('Trades', {'pair': 'XLTCZUSD'})
-            pprint.pprint(response)
         except HTTPError as e:
             print(str(e))
             time.sleep(10)
             self.lastPrice(coinA, coinB)
+        return float((response.get('result')).get('XLTCZUSD')[0][0])
 
     def checkBalance(self):
         print(self.handle.query_private('Balance'))
@@ -90,6 +93,7 @@ class Kraken(Exchange):
         product  = self.getPair(coinA, coinB)
         req_data = {'pair': product, 'type': 'buy', 'ordertype': 'limit',
                     'price': str(buyPrice), 'volume': str(orderSize)}
+        pprint.pprint(req_data)
         try:
             response = self.handle.query_private('AddOrder', req_data)
             pprint.pprint(response)
@@ -122,10 +126,10 @@ class Kraken(Exchange):
             time.sleep(100)
 
     def withdrawCrypto(self, coinA, orderSize, address):
-        name = "abcd"
+        address = 'gdaxltx'
         withdrawParams = {
             'asset': str(coinA),  # Currency determined by account specified
-            'key': str(name),
+            'key': address,
             'amount': str(orderSize)
         }
 
@@ -142,6 +146,5 @@ class Kraken(Exchange):
             self.WaitForWithdraw()
         else:
             print("Hmm something's wrong, calling withdraw again")
-            time.sleep(10)
+            time.sleep(40)
             self.withdrawCrypto(coinA, orderSize, address)
-

@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
-import datetime
-import gdax_calls
-import requests
 import pprint
-
-from datetime import timedelta
-from twisted.internet import task
-from twisted.internet import reactor
+import time
+import requests
 from requests.exceptions import HTTPError
-from exchangeClass import Exchange
 
+import gdax
+from exchangeClass import Exchange
 
 class Gdax(Exchange):
     productList = ['BTC-USD', 'BCH-USD', 'ETH-USD', 'LTC-USD',
@@ -22,10 +18,10 @@ class Gdax(Exchange):
             self.key        = f.readline().strip()
             self.b64secret  = f.readline().strip()
             self.passphrase = f.readline().strip()
-            self.handle     = gdax_calls.AuthenticatedClient(self.key, self.b64secret, self.passphrase,
+            self.handle     = gdax.AuthenticatedClient(self.key, self.b64secret, self.passphrase,
                                                              api_url=self.api_base)
             self.handle.get_accounts()
-        super.__init__()
+        super().__init__('none')
 
     def waitTillComplete(self, orderId, timeOut):
         while True:
@@ -47,11 +43,15 @@ class Gdax(Exchange):
         product  = self.getPair(coinA, coinB)
         try:
             response = self.handle.get_product_ticker(product_id=product)
-            pprint.pprint(response)
+            #print("gdax last")
+            #pprint.pprint(response)
         except HTTPError as e:
             print(str(e))
             time.sleep(10)
             self.lastPrice(coinA, coinB)
+
+        #pprint.pprint(float(response['price']))
+        return float(response['price'])
 
     def getPair(self, coinA, coinB):
         pairName = str(coinA + '-' + coinB)
@@ -99,7 +99,7 @@ class Gdax(Exchange):
         withdrawParams = {
             'amount': str(orderSize),  # Currency determined by account specified
             'currency': str(coinA),
-            'crypto_address': str(address)
+            'crypto_address': 'a'
         }
         try:
             response = self.handle.withdraw(withdrawParams)
