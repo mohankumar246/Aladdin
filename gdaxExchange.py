@@ -96,13 +96,10 @@ class Gdax(Exchange):
             self.buyLimit(coinA, coinB, buyPrice, orderSize)
 
     def withdrawCrypto(self, coinA, orderSize, address):
-        withdrawParams = {
-            'amount': str(orderSize),  # Currency determined by account specified
-            'currency': str(coinA),
-            'crypto_address': 'a'
-        }
         try:
-            response = self.handle.withdraw(withdrawParams)
+            response = self.handle.crypto_withdraw(amount=str(orderSize),
+                                                   currency=str(coinA),
+                                                   crypto_address='LWjNG8BpjyvKfoHaeRTUP88fSZERqzTqta')
             pprint.pprint(response)
         except HTTPError as e:
             print(str(e))
@@ -113,4 +110,4 @@ class Gdax(Exchange):
             self.waitTillComplete(response['id'], 100)
         else:
             print("Hmm something's wrong, calling withdraw again")
-            self.withdrawCrypto(self, coinA, orderSize, address)
+            self.withdrawCrypto(coinA, orderSize, address)

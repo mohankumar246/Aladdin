@@ -49,19 +49,19 @@ class Arbitrage:
 
 
 arbitObj                 = Arbitrage()
-arbitObj.buyExchangeObj  = Kraken('kraken.key')
-arbitObj.sellExchangeObj = Gdax('gdax.key')
+arbitObj.sellExchangeObj  = Kraken('kraken.key')
+arbitObj.buyExchangeObj = Gdax('gdax.key')
 arbitObj.coinA           = 'LTC'
 arbitObj.coinB           = 'USD'
 
 def tradeForever():
-    response = arbitObj.comparePrice()
+    #response = arbitObj.comparePrice()
     #if True:#response.buyFlag is True:
     # All these calls are blocking calls
-    arbitObj.buy(response.buyPrice)
+    #arbitObj.buy(response.buyPrice)
     arbitObj.transfer()
-    arbitObj.sell(response.sellPrice)
-    arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
+    #arbitObj.sell(response.sellPrice)
+    #arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
 
 
 while True:
