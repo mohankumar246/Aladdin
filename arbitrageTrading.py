@@ -36,11 +36,11 @@ class Arbitrage:
 
     def buy(self, buyPrice):
         print("BUY")
-        self.buyExchangeObj.buyLimit(self.coinA, self.coinB, buyPrice, orderSize=0.1)
+        self.buyExchangeObj.buyLimit(self.coinA, self.coinB, buyPrice, orderSize=0.1, blockFlag=True)
 
     def sell(self, sellPrice):
         print("SELL")
-        self.sellExchangeObj.sellLimit(self.coinA, self.coinB, sellPrice, orderSize=0.1)
+        self.sellExchangeObj.sellLimit(self.coinA, self.coinB, sellPrice, orderSize=0.1, blockFlag=True)
 
     def transfer(self):
         print("TRANSFER")
@@ -49,19 +49,20 @@ class Arbitrage:
 
 
 arbitObj                 = Arbitrage()
-arbitObj.sellExchangeObj  = Kraken('kraken.key')
-arbitObj.buyExchangeObj = Gdax('gdax.key')
+arbitObj.sellExchangeObj = Kraken('kraken.key')
+arbitObj.buyExchangeObj  = Gdax('gdax.key')
 arbitObj.coinA           = 'LTC'
 arbitObj.coinB           = 'USD'
 
 def tradeForever():
-    #response = arbitObj.comparePrice()
+    response = arbitObj.comparePrice()
     #if True:#response.buyFlag is True:
     # All these calls are blocking calls
-    #arbitObj.buy(response.buyPrice)
+    #Transfers in gdax happens from gdax -> coinbase api -> external address. # no time to track coinbase api now
+    arbitObj.buy(response.buyPrice)
     arbitObj.transfer()
-    #arbitObj.sell(response.sellPrice)
-    #arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
+    arbitObj.sell(response.sellPrice)
+    arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
 
 
 while True:

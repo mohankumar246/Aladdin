@@ -26,31 +26,45 @@ class Kraken(Exchange):
         while True:
             try:
                 response = self.handle.query_private('QueryOrders', {'txid': id})
-                status = response.get('result').get(id).get('status')
-                pprint.pprint(response)
-                pprint.pprint(status)
-                if status == 'closed':
-                    print("CLOSED")
-                    break
-                else:
-                    time.sleep(timeOut)
-                    print("OPEN")
-                    self.waitTillComplete(id, timeOut)
-            except HTTPError as e:
-                print(str(e))
+            except:
+                #print(str(e))
                 time.sleep(10)
+                self.waitTillComplete(id, timeOut)
+
+            #pprint.pprint(response)
+            print("WAIT SINCE ORDER IS OPEN")
+            try:
+                status = response.get('result').get(id).get('status')
+            except:
+                time.sleep(timeOut)
+                #print("OPEN")
+                self.waitTillComplete(id, timeOut)
+
+            pprint.pprint(status)
+            if status == 'closed':
+                print("CLOSED")
+                break
+            else:
+                time.sleep(timeOut)
+                #print("OPEN")
                 self.waitTillComplete(id, timeOut)
 
     def lastPrice(self, coinA, coinB='USD'):
         product  = self.getPair(coinA, coinB)
+        #print("kraken last")
         try:
             response = self.handle.query_public('Trades', {'pair': 'XLTCZUSD'})
-        except HTTPError as e:
-            print(str(e))
+        except:
+            #print(str(e))
             time.sleep(10)
             self.lastPrice(coinA, coinB)
-        #pprint.pprint(response.get('result').get('XLTCZUSD')[-1])
-        return float((response.get('result')).get('XLTCZUSD')[-1][0])
+        try:
+            price = response.get('result').get('XLTCZUSD')[-1][0]
+            #pprint.pprint(price)
+        except:
+            self.lastPrice(coinA, coinB)
+
+        return round(float(price), 2)
 
     def checkBalance(self):
         print(self.handle.query_private('Balance'))
@@ -73,50 +87,78 @@ class Kraken(Exchange):
         else:
             raise ValueError(pairName + "Not found")
 
-    def sellLimit(self, coinA, coinB, salePrice, orderSize):
+    def sellLimit(self, coinA, coinB, salePrice, orderSize, blockFlag=False):
+        salePrice = round(salePrice, 2)
         product  = self.getPair(coinA, coinB)
 
         req_data = {'pair': product, 'type': 'sell', 'ordertype': 'limit',
                     'price': str(salePrice), 'volume': str(orderSize)}
         try:
             response = self.handle.query_private('AddOrder', req_data)
-            pprint.pprint(response)
-            if response.get('txid') is not None:
+            #pprint.pprint(response)
+            if not response.get('error'):
                 print("SELL PLACED")
-        except HTTPError as e:
-            print(str(e))
+            else:
+                print("Hmm something's wrong, calling sell again")
+                time.sleep(10)
+                self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+        except:
+            #print(str(e))
             time.sleep(10)
-            self.checkBalance()
+            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
 
-        if response.get('txid') is not None:
-            self.waitTillComplete(response['txid'], 100)
+        try:
+            txid = response.get('result').get('txid')[0]
+        except:
+            print("Hmm something's wrong, calling sell again")
+            time.sleep(10)
+            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+
+        if txid is not None:
+            if blockFlag is True:
+                self.waitTillComplete(txid, 100)
+            self.lastOrderId = txid
         else:
             print("Hmm something's wrong, calling sell again")
-            self.sellLimit(coinA, coinB, salePrice, orderSize)
+            time.sleep(10)
+            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
 
-    def buyLimit(self, coinA, coinB, buyPrice, orderSize):
+    def buyLimit(self, coinA, coinB, buyPrice, orderSize, blockFlag=False):
+        buyPrice = round(buyPrice, 2)
         product  = self.getPair(coinA, coinB)
         req_data = {'pair': product, 'type': 'buy', 'ordertype': 'limit',
                     'price': str(buyPrice), 'volume': str(orderSize)}
-        pprint.pprint(req_data)
+        #pprint.pprint(req_data)
         try:
             response = self.handle.query_private('AddOrder', req_data)
-            pprint.pprint(response)
+            #pprint.pprint(response)
             if not response.get('error'):
                 print("BUY PLACED")
-        except HTTPError as e:
-            print(str(e))
+            else:
+                print("Hmm something's wrong, calling buy again")
+                time.sleep(10)
+                self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+        except:
+            #print(str(e))
             time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize)
+            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
 
-        txid = response.get('result').get('txid')[0]
+        try:
+            txid = response.get('result').get('txid')[0]
+        except:
+            print("Hmm something's wrong, calling buy again")
+            time.sleep(10)
+            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+
         #print(txid)
         if txid is not None:
-            self.waitTillComplete(txid, 100)
+            if blockFlag is True:
+                self.waitTillComplete(txid, 100)
+            self.lastOrderId = txid
         else:
             print("Hmm something's wrong, calling buy again")
             time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize)
+            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
 
     def WaitForWithdraw(self, coinA, refid):
         while True:
@@ -160,3 +202,10 @@ class Kraken(Exchange):
             print("Hmm something's wrong, calling withdraw again")
             time.sleep(40)
             self.withdrawCrypto(coinA, orderSize, address)
+
+    def waitTillLastOrderIsComplete(self):
+        if self.lastOrderId is not None:
+            self.waitTillComplete(self.lastOrderId, 100)
+        else:
+            print("Hmm something's wrong, calling waitTillLastOrderIsComplete again")
+            self.waitTillLastOrderIsComplete()
