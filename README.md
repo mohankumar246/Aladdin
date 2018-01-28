@@ -3,10 +3,13 @@
 
 ##A crypto currency trading bot ##
 This also a wrapper for the api calls of different exchanges.
+
 Because different exchanges have their own set of calls to do trades or query info.
+
 This makes it difficult to write a bot as an individual needs to spend time in reading their docs.
 
 This uses the python libraries available for exchanges, unifies them to make it easier to write bots.
+
 Currently supports gdax, kraken and bittrex.
 
 
