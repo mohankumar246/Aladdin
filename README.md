@@ -17,10 +17,11 @@ mkdir -p $VIRTUAL_ENV
 virtualenv --python=/usr/bin/python3.5 $VIRTUAL_ENV
 source $VIRTUAL_ENV/bin/activate
 # install from PyPI
-pip install krakenex
-pip install gdax
 pip install requests
 pip install pprint
+pip install krakenex
+pip install gdax
+pip install python-bittrex
 
 To deactivate the virtual env cmd in terminal:  deactivate
 

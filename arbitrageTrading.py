@@ -62,6 +62,7 @@ def tradeForever():
     arbitObj.buy(response.buyPrice)
     arbitObj.transfer()
     arbitObj.sell(response.sellPrice)
+    time.sleep(1800)
     arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
 
 

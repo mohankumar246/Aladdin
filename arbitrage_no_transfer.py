@@ -26,8 +26,8 @@ class Arbitrage:
     def comparePrice(self):
         print("COMPARE")
         response = compareResponse()
-        response.buyPrice  = self.buyExchangeObj.lastPrice(self.coinA, self.coinB) - 0.1
-        response.sellPrice = self.sellExchangeObj.lastPrice(self.coinA, self.coinB) + 0.1
+        response.buyPrice  = self.buyExchangeObj.lastPrice(self.coinA, self.coinB) - 0.05
+        response.sellPrice = self.sellExchangeObj.lastPrice(self.coinA, self.coinB) + 0.05
 
         response.buyFlag  = False
         if response.sellPrice  > response.buyPrice:
@@ -69,6 +69,7 @@ def tradeForever():
         arbitObj.totalProfit += ((response.sellPrice - response.buyPrice)*arbitObj.orderSize)
         print("Total Profit", arbitObj.totalProfit)
         arbitObj.buyExchangeObj, arbitObj.sellExchangeObj = arbitObj.sellExchangeObj, arbitObj.buyExchangeObj
+        time.sleep(1800)
 
 
 while True:
