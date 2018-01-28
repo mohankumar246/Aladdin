@@ -1,34 +1,43 @@
-# README #
+# Aladdin #
 
-This README would normally document whatever steps are necessary to get your application up and running.
 
-### What is this repository for? ###
+##A crypto currency trading bot ##
+This also a wrapper for the api calls of different exchanges.<br />
+Because different exchanges have their own set of calls to do trades or query info.<br />
+This makes it difficult to write a bot as an individual needs to spend time in reading their docs.
 
-This is for creating a crypto currency trading bot.
+This uses the python libraries available for exchanges, unifies them to make it easier to write bots<br />
+Currently supports gdax, kraken and bittrex<br />
+
 
 ### How do I get set up? ###
 
 - Install python 3.5, python-virtualenv and python-pip.
 - Create a project directory and pull the source
 - Setup a virtual env in the terminal:
-# bootstrap virtualenv
+
+```bash
 export VIRTUAL_ENV=.virtualenv/aladdin
 mkdir -p $VIRTUAL_ENV
 virtualenv --python=/usr/bin/python3.5 $VIRTUAL_ENV
 source $VIRTUAL_ENV/bin/activate
 # install from PyPI
-pip install requests
-pip install pprint
-pip install krakenex
-pip install gdax
-pip install python-bittrex
+pip install requests pprint krakenex gdax python-bittrex
+```
 
-To deactivate the virtual env cmd in terminal:  deactivate
+
+To deactivate the virtual env cmd in terminal:  
+```bash
+deactivate
+```
 
 Run this command everytime:
+```bash
 source .virtualenv/aladdin/bin/activate
+```
 
-There will be a better way, soon. Something called brew automatically calls activate. Havent looked into it yet.
+There will be a better way, soon. <br />
+Something called brew automatically calls activate. Haven't looked into it yet.
 
 
 ### Contribution guidelines ###
@@ -36,5 +45,3 @@ There will be a better way, soon. Something called brew automatically calls acti
 to do
 
 ### Who do I talk to? ###
-
-talk to us
