@@ -58,16 +58,24 @@ class Kraken(Exchange):
             #print(str(e))
             time.sleep(10)
             self.lastPrice(coinA, coinB)
-
+        price = ''
         try:
             price = response.get('result').get('XLTCZUSD')[-1][0]
+            #pprint.pprint(response.get('result').get('XLTCZUSD')[-1])
             #pprint.pprint(price)
         except:
             time.sleep(10)
             self.lastPrice(coinA, coinB)
 
-        return round(float(price), 2)
-
+        try:
+            price = round(float(price), 2)
+            #print("kraken price",price)
+        except:
+            time.sleep(10)
+            self.lastPrice(coinA, coinB)
+        
+        #print("Must not happen kraken", price)
+        return price   
 
     def checkBalance(self):
         print(self.handle.query_private('Balance'))
@@ -212,3 +220,5 @@ class Kraken(Exchange):
         else:
             print("Hmm something's wrong, calling waitTillLastOrderIsComplete again")
             self.waitTillLastOrderIsComplete()
+
+

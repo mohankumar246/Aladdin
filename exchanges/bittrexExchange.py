@@ -16,7 +16,7 @@ class BittrexC(Exchange):
         with open(keyfile, 'r') as f:
             key          = f.readline().strip()
             secret       = f.readline().strip()
-            self.handle  = Bittrex(key,secret)
+            self.handle  = Bittrex(key,secret,api_version=API_V2_0)
 
         super().__init__('none')
         self.lastOrderId = None
