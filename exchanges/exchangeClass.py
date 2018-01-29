@@ -1,8 +1,3 @@
-import pprint
-import time
-import requests
-from requests.exceptions import HTTPError
-
 class Exchange:
     def __init__(self, keyfile='none'):
         pass

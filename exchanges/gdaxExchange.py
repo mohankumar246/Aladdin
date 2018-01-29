@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import gdax
-from exchangeClass import Exchange
+from exchanges.exchangeClass import Exchange
 
 class Gdax(Exchange):
     productList = ['BTC-USD', 'BCH-USD', 'ETH-USD', 'LTC-USD',

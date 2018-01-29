@@ -3,8 +3,10 @@ import time
 import requests
 from requests.exceptions import HTTPError
 
-from krakenExchange import Kraken
-from gdaxExchange   import Gdax
+import exchanges
+
+from exchanges.krakenExchange import Kraken
+from exchanges.gdaxExchange   import Gdax
 
 class compareResponse:
     def __init__(self):
@@ -50,8 +52,8 @@ class Arbitrage:
 
 
 arbitObj                 = Arbitrage()
-arbitObj.sellExchangeObj = Kraken('kraken.key')
-arbitObj.buyExchangeObj  = Gdax('gdax.key')
+arbitObj.sellExchangeObj = Kraken('../exchangeKeys/kraken.key')
+arbitObj.buyExchangeObj  = Gdax('../exchangeKeys/gdax.key')
 arbitObj.coinA           = 'LTC'
 arbitObj.coinB           = 'USD'
 arbitObj.orderSize       = 2

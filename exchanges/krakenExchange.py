@@ -11,7 +11,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import krakenex
-from exchangeClass import Exchange
+from exchanges.exchangeClass import Exchange
 
 class Kraken(Exchange):
     productList = ['XXBTZUSD', 'XETHZUSD', 'XLTCZUSD',

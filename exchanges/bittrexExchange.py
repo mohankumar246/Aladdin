@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from bittrex.bittrex import *
-from exchangeClass import Exchange
+from exchanges.exchangeClass import Exchange
 
 class BittrexC(Exchange):
     productList = ['BTC-USD', 'BCH-USD', 'ETH-USD', 'LTC-USD',
@@ -16,7 +16,8 @@ class BittrexC(Exchange):
         with open(keyfile, 'r') as f:
             key          = f.readline().strip()
             secret       = f.readline().strip()
-            self.handle  = Bittrex(key,secret,api_version=API_V2_0)
+            apiVersion   = f.readline().strip()
+            self.handle  = Bittrex(key, secret, api_version=apiVersion)
 
         super().__init__('none')
         self.lastOrderId = None
