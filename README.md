@@ -42,6 +42,19 @@ source .virtualenv/aladdin/bin/activate
 There will be a better way, soon. <br />
 Something called brew automatically calls activate. Haven't looked into it yet.
 
+To run tests:
+
+Update the exchange keys.
+
+Change your working directory to "tests" folder
+
+Run a test case Ex: arbitrage_no_transfer.py.
+
+
+
+
+
+
 
 ### Contribution guidelines ###
 
