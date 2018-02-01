@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+import os
+import sys
+
+projectPath = os.path.dirname(os.getcwd())
+print("Adding project path to sys path so that this project modules/packages can be imported:", projectPath)
+sys.path.extend([projectPath])
+
 import pprint
 import time
 import requests
