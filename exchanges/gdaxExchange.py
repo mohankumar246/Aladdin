@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import pprint
 import time
@@ -31,7 +31,7 @@ class Gdax(Exchange):
             except:
                 #print(str(e))
                 time.sleep(10)
-                self.waitTillComplete(orderId, timeOut)
+                response = self.waitTillComplete(orderId, timeOut)
 
             #pprint.pprint(response)
             print("WAIT SINCE ORDER IS OPEN")
@@ -52,15 +52,16 @@ class Gdax(Exchange):
         product  = self.getPair(coinA, coinB)
         try:
             response = self.handle.get_product_ticker(product_id=product)
+            price = round(float(response['price']), 2)
             #print("gdax last")
             #pprint.pprint(response)
+            #pprint.pprint(float(response['price']))
         except:
             #print(str(e))
             time.sleep(10)
-            self.lastPrice(coinA, coinB)
+            price = self.lastPrice(coinA, coinB)
 
-        #pprint.pprint(float(response['price']))
-        return round(float(response['price']), 2)
+        return price
 
     def getPair(self, coinA, coinB):
         pairName = str(coinA + '-' + coinB)
@@ -81,7 +82,7 @@ class Gdax(Exchange):
         except:
             #print(str(e))
             time.sleep(10)
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
 
         if (response.get('id') is not None) or (response.get('status') != 'rejected'):
             if blockFlag is True:
@@ -89,7 +90,10 @@ class Gdax(Exchange):
             self.lastOrderId = response['id']
         else:
             print("Hmm something's wrong, calling sell again")
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            time.sleep(10)
+            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+
+        return response
 
     def buyLimit(self, coinA, coinB, buyPrice, orderSize, blockFlag=False):
         buyPrice = round(buyPrice, 2)
@@ -100,7 +104,7 @@ class Gdax(Exchange):
         except:
             #print(str(e))
             time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
 
         if (response.get('id') is not None) or (response.get('status') != 'rejected'):
             if blockFlag is True:
@@ -108,7 +112,10 @@ class Gdax(Exchange):
             self.lastOrderId = response['id']
         else:
             print("Hmm something's wrong, calling buy again")
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            time.sleep(10)
+            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+
+        return response
 
     def withdrawCrypto(self, coinA, orderSize, address):
         try:

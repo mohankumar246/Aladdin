@@ -23,22 +23,15 @@ class Kraken(Exchange):
         super().__init__('none')
 
     def waitTillComplete(self, id, timeOut):
+        print("WAIT SINCE ORDER IS OPEN")
         while True:
             try:
                 response = self.handle.query_private('QueryOrders', {'txid': id})
+                status   = response.get('result').get(id).get('status')
             except:
                 #print(str(e))
                 time.sleep(10)
-                self.waitTillComplete(id, timeOut)
-
-            #pprint.pprint(response)
-            print("WAIT SINCE ORDER IS OPEN")
-            try:
-                status = response.get('result').get(id).get('status')
-            except:
-                time.sleep(timeOut)
-                #print("OPEN")
-                self.waitTillComplete(id, timeOut)
+                status = self.waitTillComplete(id, timeOut)
 
             pprint.pprint(status)
             if status == 'closed':
@@ -47,34 +40,20 @@ class Kraken(Exchange):
             else:
                 time.sleep(timeOut)
                 #print("OPEN")
-                self.waitTillComplete(id, timeOut)
+                status = self.waitTillComplete(id, timeOut)
+
+        return status
 
     def lastPrice(self, coinA, coinB='USD'):
         product  = self.getPair(coinA, coinB)
-        #print("kraken last")
         try:
             response = self.handle.query_public('Trades', {'pair': 'XLTCZUSD'})
-        except:
-            #print(str(e))
-            time.sleep(10)
-            self.lastPrice(coinA, coinB)
-        price = ''
-        try:
-            price = response.get('result').get('XLTCZUSD')[-1][0]
-            #pprint.pprint(response.get('result').get('XLTCZUSD')[-1])
-            #pprint.pprint(price)
+            price    = response.get('result').get('XLTCZUSD')[-1][0]
+            price    = round(float(price), 2)
         except:
             time.sleep(10)
-            self.lastPrice(coinA, coinB)
+            price    = self.lastPrice(coinA, coinB)
 
-        try:
-            price = round(float(price), 2)
-            #print("kraken price",price)
-        except:
-            time.sleep(10)
-            self.lastPrice(coinA, coinB)
-        
-        #print("Must not happen kraken", price)
         return price   
 
     def checkBalance(self):
@@ -112,18 +91,13 @@ class Kraken(Exchange):
             else:
                 print("Hmm something's wrong, calling sell again")
                 time.sleep(10)
-                self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+                response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
         except:
             #print(str(e))
             time.sleep(10)
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
 
-        try:
-            txid = response.get('result').get('txid')[0]
-        except:
-            print("Hmm something's wrong, calling sell again")
-            time.sleep(10)
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+        txid = response.get('result').get('txid')[0]
 
         if txid is not None:
             if blockFlag is True:
@@ -132,7 +106,9 @@ class Kraken(Exchange):
         else:
             print("Hmm something's wrong, calling sell again")
             time.sleep(10)
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+
+        return response
 
     def buyLimit(self, coinA, coinB, buyPrice, orderSize, blockFlag=False):
         buyPrice = round(buyPrice, 2)
@@ -148,18 +124,13 @@ class Kraken(Exchange):
             else:
                 print("Hmm something's wrong, calling buy again")
                 time.sleep(10)
-                self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+                response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
         except:
             #print(str(e))
             time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
 
-        try:
-            txid = response.get('result').get('txid')[0]
-        except:
-            print("Hmm something's wrong, calling buy again")
-            time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+        txid = response.get('result').get('txid')[0]
 
         #print(txid)
         if txid is not None:
@@ -169,7 +140,9 @@ class Kraken(Exchange):
         else:
             print("Hmm something's wrong, calling buy again")
             time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+
+        return response
 
     def WaitForWithdraw(self, coinA, refid):
         while True:
