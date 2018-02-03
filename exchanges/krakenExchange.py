@@ -47,14 +47,14 @@ class Kraken(Exchange):
     def lastPrice(self, coinA, coinB='USD'):
         product  = self.getPair(coinA, coinB)
         try:
-            response = self.handle.query_public('Trades', {'pair': 'XLTCZUSD'})
-            price    = response.get('result').get('XLTCZUSD')[-1][0]
+            response = self.handle.query_public('Trades', {'pair': product})
+            price    = response.get('result').get(product)[-1][0]
             price    = round(float(price), 2)
         except:
             time.sleep(10)
             price    = self.lastPrice(coinA, coinB)
 
-        return price   
+        return price
 
     def checkBalance(self):
         print(self.handle.query_private('Balance'))
@@ -193,5 +193,3 @@ class Kraken(Exchange):
         else:
             print("Hmm something's wrong, calling waitTillLastOrderIsComplete again")
             self.waitTillLastOrderIsComplete()
-
-
