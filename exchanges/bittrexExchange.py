@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+#Copyright (c) 2017-2018 Mohankumar Nekkarakalaya
+
+# This file is part of Aladdin.
+# Licensed under the MIT license. See LICENSE.txt in the project folder.
+
 import pprint
 import time
 import requests
@@ -12,53 +17,50 @@ class BittrexC(Exchange):
     productList = ['BTC-USD', 'BCH-USD', 'ETH-USD', 'LTC-USD',
                    'ETH-BTC', 'BTC-LTC']
 
-    def __init__(self, keyfile):
+    def __init__(self, keyfile, coinA='BTC', coinB='USD', callTimeout=10):
+        super().__init__()
         with open(keyfile, 'r') as f:
             key          = f.readline().strip()
             secret       = f.readline().strip()
             apiVersion   = f.readline().strip()
             self.handle  = Bittrex(key, secret, api_version=apiVersion)
 
-        super().__init__('none')
         self.lastOrderId = None
+        self.currencyPair = self.getPair(coinA, coinB)
+        self.callTimeout  = callTimeout
+        if coinB == 'USD':
+            self.roundingPlaces = 2
+        else:
+            self.roundingPlaces = 5
 
-    def waitTillComplete(self, orderId, timeOut):
+    def waitTillComplete(self, orderId):
         while True:
             try:
                 response = self.handle.get_order(orderId)
-            except:
-                time.sleep(10)
-                self.waitTillComplete(orderId, timeOut)
-
-            pprint.pprint(response)
-            print("WAIT SINCE ORDER IS OPEN")
-            try:
                 status = response.get('result').get('IsOpen')
+                if str(status) is 'False':
+                    print("SETTLED")
+                    break
+                else:
+                    time.sleep(self.callTimeout)
+                    print("Bittrex WAIT SINCE ORDER IS OPEN")
             except:
-                time.sleep(timeOut)
-                self.waitTillComplete(orderId, timeOut)
+                print("Bittrex WAIT SINCE ORDER IS OPEN")
+                time.sleep(self.callTimeout)
 
-            if str(status) is 'False':
-                print("SETTLED")
-                break
-            else:
-                time.sleep(timeOut)
-                self.waitTillComplete(orderId, timeOut)
-
-    def lastPrice(self, coinA, coinB='USD'):
-        product  = self.getPair(coinA, coinB)
+    def lastPrice(self):
         try:
-            response = self.handle.get_ticker(market=product)
+            response = self.handle.get_ticker(market=self.currencyPair)
             #print("bittrex last")
             #pprint.pprint(response)
             price = response.get('result').get('Last')
         except:
             #print(str(e))
-            time.sleep(10)
-            self.lastPrice(coinA, coinB)
+            time.sleep(self.callTimeout)
+            self.lastPrice()
 
         #pprint.pprint(float(response['price']))
-        return round(float(price), 2)
+        return round(float(price), self.roundingPlaces)
 
     def getPair(self, coinA, coinB):
         pairName = str(coinA + '-' + coinB)
@@ -70,43 +72,41 @@ class BittrexC(Exchange):
     def checkBalance(self):
         print()
 
-    def sellLimit(self, coinA, coinB, salePrice, orderSize, blockFlag=False):
-        salePrice = round(salePrice, 6)
-        product  = self.getPair(coinA, coinB)
+    def sellLimit(self, salePrice, orderSize, blockFlag=False):
+        salePrice = round(salePrice, self.roundingPlaces)
         try:
-            response = self.handle.sell_limit(market=product, quantity=orderSize, rate=salePrice)
+            response = self.handle.sell_limit(market=self.currencyPair, quantity=orderSize, rate=salePrice)
             pprint.pprint(response)
         except:
             #print(str(e))
-            time.sleep(10)
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            self.sellLimit(salePrice, orderSize, blockFlag)
 
         if (response.get('message') == '') and (response.get('success') != 'False'):
             if blockFlag is True:
-                self.waitTillComplete(response.get('result').get('uuid'), 100)
+                self.waitTillComplete(response.get('result').get('uuid'))
             self.lastOrderId = response.get('result').get('uuid')
         else:
             print("Hmm something's wrong, calling sell again")
-            self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            self.sellLimit(salePrice, orderSize, blockFlag)
 
-    def buyLimit(self, coinA, coinB, buyPrice, orderSize, blockFlag=False):
-        buyPrice = round(buyPrice, 6)
-        product  = self.getPair(coinA, coinB)
+    def buyLimit(self, buyPrice, orderSize, blockFlag=False):
+        buyPrice = round(buyPrice, self.roundingPlaces)
         try:
-            response = self.handle.buy_limit(market=product, quantity=orderSize, rate=buyPrice)
+            response = self.handle.buy_limit(market=self.currencyPair, quantity=orderSize, rate=buyPrice)
             pprint.pprint(response)
         except:
             #print(str(e))
-            time.sleep(10)
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            self.buyLimit(buyPrice, orderSize, blockFlag)
 
         if (response.get('message') == '') and (response.get('success') != 'False'):
             if blockFlag is True:
-                self.waitTillComplete(response.get('result').get('uuid'), 100)
+                self.waitTillComplete(response.get('result').get('uuid'))
             self.lastOrderId = response.get('result').get('uuid')
         else:
             print("Hmm something's wrong, calling buy again")
-            self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            self.buyLimit(buyPrice, orderSize, blockFlag)
 
     def withdrawCrypto(self, coinA, orderSize, address):
         try:
@@ -116,19 +116,39 @@ class BittrexC(Exchange):
             pprint.pprint(response)
         except HTTPError as e:
             print(str(e))
-            time.sleep(10)
+            time.sleep(self.callTimeout)
             self.withdrawCrypto(coinA, orderSize, address)
 
         if response.get('result').get('uuid') is not None:
-            self.waitTillComplete(str(response.get('result').get('uuid')), 100)
+            self.waitTillComplete(str(response.get('result').get('uuid')))
         else:
             print("Hmm something's wrong, calling withdraw again")
             self.withdrawCrypto(coinA, orderSize, address)
 
     def waitTillLastOrderIsComplete(self):
         if self.lastOrderId is not None:
-            self.waitTillComplete(self.lastOrderId, 100)
+            self.waitTillComplete(self.lastOrderId)
         else:
             print("Hmm something's wrong, calling waitTillLastOrderIsComplete again")
             self.waitTillLastOrderIsComplete()
+
+    def cancelOrderId(self, orderId, blockFlag=False):
+        try:
+            response = self.handle.cancel(
+                           uuid=str(orderId))
+            pprint.pprint(response)
+        except:
+            time.sleep(self.callTimeout)
+            response = self.cancelOrderId(orderId)
+
+        if (response.get('message') == '') and (response.get('success') != 'False'):
+            if blockFlag is True:
+                self.waitTillComplete(response.get(orderId))
+        else:
+            print("Hmm something's wrong, calling cancelOrderId again")
+            time.sleep(self.callTimeout)
+            response = self.cancelOrderId(orderId)
+
+        return response
+
 

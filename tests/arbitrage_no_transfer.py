@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+#Copyright (c) 2017-2018 Mohankumar Nekkarakalaya
+
+# This file is part of Aladdin.
+# Licensed under the MIT license. See LICENSE.txt in the project folder.
+
 import os
 import sys
 
@@ -28,8 +33,6 @@ class Arbitrage:
     def __init__(self):
         self.buyExchangeObj = 'none'
         self.sellExchangeObj = 'none'
-        self.coinA = 'LTC'
-        self.coinB = 'USD'
         self.orderSize = 0
         self.totalProfit = 0
         pass
@@ -37,8 +40,8 @@ class Arbitrage:
     def comparePrice(self):
         print("COMPARE")
         response = compareResponse()
-        response.buyPrice  = self.buyExchangeObj.lastPrice(self.coinA, self.coinB) - 0.05
-        response.sellPrice = self.sellExchangeObj.lastPrice(self.coinA, self.coinB) + 0.05
+        response.buyPrice  = self.buyExchangeObj.lastPrice() - 0.02
+        response.sellPrice = self.sellExchangeObj.lastPrice() + 0.02
 
         response.buyFlag  = False
         if response.sellPrice  > response.buyPrice:
@@ -48,11 +51,11 @@ class Arbitrage:
 
     def buy(self, buyPrice):
         print("BUY")
-        self.buyExchangeObj.buyLimit(self.coinA, self.coinB, buyPrice, orderSize=self.orderSize, blockFlag=False)
+        self.buyExchangeObj.buyLimit(buyPrice, orderSize=self.orderSize, blockFlag=False)
 
     def sell(self, sellPrice):
         print("SELL")
-        self.sellExchangeObj.sellLimit(self.coinA, self.coinB, sellPrice, orderSize=self.orderSize, blockFlag=False)
+        self.sellExchangeObj.sellLimit(sellPrice, orderSize=self.orderSize, blockFlag=False)
 
     def transfer(self):
         print("TRANSFER")
@@ -61,10 +64,8 @@ class Arbitrage:
 
 
 arbitObj                 = Arbitrage()
-arbitObj.sellExchangeObj = Kraken('../exchangeKeys/kraken.key')
-arbitObj.buyExchangeObj  = Gdax('../exchangeKeys/gdax.key')
-arbitObj.coinA           = 'LTC'
-arbitObj.coinB           = 'USD'
+arbitObj.sellExchangeObj = Kraken('../exchangeKeys/kraken.key', coinA='LTC', coinB='USD')
+arbitObj.buyExchangeObj  = Gdax('../exchangeKeys/gdax.key', coinA='LTC', coinB='USD')
 arbitObj.orderSize       = 2
 
 def tradeForever():

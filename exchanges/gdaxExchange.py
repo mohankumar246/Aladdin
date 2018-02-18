@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+#Copyright (c) 2017-2018 Mohankumar Nekkarakalaya
+
+# This file is part of Aladdin.
+# Licensed under the MIT license. See LICENSE.txt in the project folder.
+
 import pprint
 import time
 import requests
@@ -12,7 +17,9 @@ class Gdax(Exchange):
     productList = ['BTC-USD', 'BCH-USD', 'ETH-USD', 'LTC-USD',
                    'ETH-BTC', 'LTC-BTC']
 
-    def __init__(self, keyfile):
+    def __init__(self, keyfile, coinA='BTC', coinB='USD', callTimeout=10):
+        super().__init__()
+
         with open(keyfile, 'r') as f:
             api_base     = f.readline().strip()
             key          = f.readline().strip()
@@ -21,45 +28,43 @@ class Gdax(Exchange):
             self.handle  = gdax.AuthenticatedClient(key, b64secret, passphrase,
                                                              api_url=api_base)
 
-        super().__init__('none')
-        self.lastOrderId = None
+        self.lastOrderId  = None
+        self.currencyPair = self.getPair(coinA, coinB)
+        self.callTimeout  = callTimeout
+        if coinB == 'USD':
+            self.roundingPlaces = 2
+        else:
+            self.roundingPlaces = 5
 
-    def waitTillComplete(self, orderId, timeOut):
+
+    def waitTillComplete(self, orderId):
         while True:
             try:
                 response = self.handle.get_order(orderId)
+                status   = response.get('settled')
+
+                if str(status) is 'True':
+                    print("SETTLED")
+                    break
+                else:
+                    print("WAIT SINCE ORDER IS OPEN")
+                    time.sleep(self.callTimeout)
             except:
                 #print(str(e))
-                time.sleep(10)
-                response = self.waitTillComplete(orderId, timeOut)
+                print("WAIT SINCE ORDER IS OPEN")
+                time.sleep(self.callTimeout)
 
-            #pprint.pprint(response)
-            print("WAIT SINCE ORDER IS OPEN")
-            try:
-                status = response.get('settled')
-            except:
-                time.sleep(timeOut)
-                self.waitTillComplete(orderId, timeOut)
-
-            if str(status) is 'True':
-                print("SETTLED")
-                break
-            else:
-                time.sleep(timeOut)
-                self.waitTillComplete(orderId, timeOut)
-
-    def lastPrice(self, coinA, coinB='USD'):
-        product  = self.getPair(coinA, coinB)
+    def lastPrice(self):
         try:
-            response = self.handle.get_product_ticker(product_id=product)
-            price = round(float(response['price']), 2)
+            response = self.handle.get_product_ticker(product_id=self.currencyPair)
+            price = round(float(response['price']), self.roundingPlaces)
             #print("gdax last")
             #pprint.pprint(response)
             #pprint.pprint(float(response['price']))
         except:
             #print(str(e))
-            time.sleep(10)
-            price = self.lastPrice(coinA, coinB)
+            time.sleep(self.callTimeout)
+            price = self.lastPrice()
 
         return price
 
@@ -73,47 +78,45 @@ class Gdax(Exchange):
     def checkBalance(self):
         print()
 
-    def sellLimit(self, coinA, coinB, salePrice, orderSize, blockFlag=False):
-        salePrice = round(salePrice, 2)
-        product  = self.getPair(coinA, coinB)
+    def sellLimit(self, salePrice, orderSize, blockFlag=False):
+        salePrice = round(salePrice, self.roundingPlaces)
         try:
-            response = self.handle.sell(price=str(salePrice), size=orderSize, product_id=product, post_only='True')
+            response = self.handle.sell(price=str(salePrice), size=orderSize, product_id=self.currencyPair, post_only='True')
             #pprint.pprint(response)
         except:
             #print(str(e))
-            time.sleep(10)
-            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            response = self.sellLimit(salePrice, orderSize, blockFlag)
 
         if (response.get('id') is not None) or (response.get('status') != 'rejected'):
             if blockFlag is True:
-                self.waitTillComplete(response['id'], 100)
+                self.waitTillComplete(response['id'])
             self.lastOrderId = response['id']
         else:
             print("Hmm something's wrong, calling sell again")
-            time.sleep(10)
-            response = self.sellLimit(coinA, coinB, salePrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            response = self.sellLimit(salePrice, orderSize, blockFlag)
 
         return response
 
-    def buyLimit(self, coinA, coinB, buyPrice, orderSize, blockFlag=False):
-        buyPrice = round(buyPrice, 2)
-        product  = self.getPair(coinA, coinB)
+    def buyLimit(self, buyPrice, orderSize, blockFlag=False):
+        buyPrice = round(buyPrice, self.roundingPlaces)
         try:
-            response = self.handle.buy(price=str(buyPrice), size=orderSize, product_id=product, post_only='True')
+            response = self.handle.buy(price=str(buyPrice), size=orderSize, product_id=self.currencyPair, post_only='True')
             #pprint.pprint(response)
         except:
             #print(str(e))
-            time.sleep(10)
-            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            response = self.buyLimit(buyPrice, orderSize, blockFlag)
 
         if (response.get('id') is not None) or (response.get('status') != 'rejected'):
             if blockFlag is True:
-                self.waitTillComplete(response['id'], 100)
+                self.waitTillComplete(response['id'])
             self.lastOrderId = response['id']
         else:
             print("Hmm something's wrong, calling buy again")
-            time.sleep(10)
-            response = self.buyLimit(coinA, coinB, buyPrice, orderSize, blockFlag)
+            time.sleep(self.callTimeout)
+            response = self.buyLimit(buyPrice, orderSize, blockFlag)
 
         return response
 
@@ -125,19 +128,40 @@ class Gdax(Exchange):
             pprint.pprint(response)
         except HTTPError as e:
             print(str(e))
-            time.sleep(10)
+            time.sleep(self.callTimeout)
             self.withdrawCrypto(coinA, orderSize, address)
 
         if response.get('id') is not None:
-            self.waitTillComplete(str(response['id']), 100)
+            self.waitTillComplete(str(response['id']))
         else:
             print("Hmm something's wrong, calling withdraw again")
             self.withdrawCrypto(coinA, orderSize, address)
 
     def waitTillLastOrderIsComplete(self):
         if self.lastOrderId is not None:
-            self.waitTillComplete(self.lastOrderId, 100)
+            self.waitTillComplete(self.lastOrderId)
         else:
             print("Hmm something's wrong, calling waitTillLastOrderIsComplete again")
             self.waitTillLastOrderIsComplete()
+
+    def cancelOrderId(self, orderId, blockFlag=False):
+        id = 0
+        try:
+            response = self.handle.cancel_order(str(orderId))
+            id = response[0]
+            pprint.pprint(response)
+        except:
+            time.sleep(self.callTimeout)
+            id = self.cancelOrderId(orderId)
+
+        if id == orderId:
+            if blockFlag is True:
+                self.waitTillComplete(orderId)
+        else:
+            print("Hmm something's wrong, calling cancelOrderId again")
+            time.sleep(self.callTimeout)
+            id = self.cancelOrderId(orderId)
+
+        return id
+
 
