@@ -1,7 +1,7 @@
 # Aladdin #
 
 
->Copyright (c) 2017-2018 Mohankumar Nekkarakalaya
+>Copyright (c) 2018 Mohankumar Nekkarakalaya
 
 >Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ This makes it difficult to write a bot as an individual needs to spend time in r
 
 This uses the python libraries available for exchanges, unifies them to make it easier to write bots.
 
-Currently supports gdax, kraken and bittrex.
+Currently supports gdax, kraken, bittrex and binance.
 
 
 ### How do I get set up? ###
